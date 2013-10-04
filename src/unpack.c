@@ -26,7 +26,7 @@
 
 typedef struct {
 	msgpack_zone* z;
-	bool referenced;
+	int referenced;
 } unpack_user;
 
 
@@ -55,53 +55,53 @@ static int template_execute(template_context* ctx,
 		const char* data, size_t len, size_t* off);
 
 
-static inline msgpack_object template_callback_root(unpack_user* u)
-{ msgpack_object o = {}; return o; }
+static msgpack_object template_callback_root(unpack_user* u)
+{ msgpack_object o; memset(&o, 0, sizeof(o)); return o; }
 
-static inline int template_callback_uint8(unpack_user* u, uint8_t d, msgpack_object* o)
+static int template_callback_uint8(unpack_user* u, uint8_t d, msgpack_object* o)
 { o->type = MSGPACK_OBJECT_POSITIVE_INTEGER; o->via.u64 = d; return 0; }
 
-static inline int template_callback_uint16(unpack_user* u, uint16_t d, msgpack_object* o)
+static int template_callback_uint16(unpack_user* u, uint16_t d, msgpack_object* o)
 { o->type = MSGPACK_OBJECT_POSITIVE_INTEGER; o->via.u64 = d; return 0; }
 
-static inline int template_callback_uint32(unpack_user* u, uint32_t d, msgpack_object* o)
+static int template_callback_uint32(unpack_user* u, uint32_t d, msgpack_object* o)
 { o->type = MSGPACK_OBJECT_POSITIVE_INTEGER; o->via.u64 = d; return 0; }
 
-static inline int template_callback_uint64(unpack_user* u, uint64_t d, msgpack_object* o)
+static int template_callback_uint64(unpack_user* u, uint64_t d, msgpack_object* o)
 { o->type = MSGPACK_OBJECT_POSITIVE_INTEGER; o->via.u64 = d; return 0; }
 
-static inline int template_callback_int8(unpack_user* u, int8_t d, msgpack_object* o)
+static int template_callback_int8(unpack_user* u, int8_t d, msgpack_object* o)
 { if(d >= 0) { o->type = MSGPACK_OBJECT_POSITIVE_INTEGER; o->via.u64 = d; return 0; }
 		else { o->type = MSGPACK_OBJECT_NEGATIVE_INTEGER; o->via.i64 = d; return 0; } }
 
-static inline int template_callback_int16(unpack_user* u, int16_t d, msgpack_object* o)
+static int template_callback_int16(unpack_user* u, int16_t d, msgpack_object* o)
 { if(d >= 0) { o->type = MSGPACK_OBJECT_POSITIVE_INTEGER; o->via.u64 = d; return 0; }
 		else { o->type = MSGPACK_OBJECT_NEGATIVE_INTEGER; o->via.i64 = d; return 0; } }
 
-static inline int template_callback_int32(unpack_user* u, int32_t d, msgpack_object* o)
+static int template_callback_int32(unpack_user* u, int32_t d, msgpack_object* o)
 { if(d >= 0) { o->type = MSGPACK_OBJECT_POSITIVE_INTEGER; o->via.u64 = d; return 0; }
 		else { o->type = MSGPACK_OBJECT_NEGATIVE_INTEGER; o->via.i64 = d; return 0; } }
 
-static inline int template_callback_int64(unpack_user* u, int64_t d, msgpack_object* o)
+static int template_callback_int64(unpack_user* u, int64_t d, msgpack_object* o)
 { if(d >= 0) { o->type = MSGPACK_OBJECT_POSITIVE_INTEGER; o->via.u64 = d; return 0; }
 		else { o->type = MSGPACK_OBJECT_NEGATIVE_INTEGER; o->via.i64 = d; return 0; } }
 
-static inline int template_callback_float(unpack_user* u, float d, msgpack_object* o)
+static int template_callback_float(unpack_user* u, float d, msgpack_object* o)
 { o->type = MSGPACK_OBJECT_DOUBLE; o->via.dec = d; return 0; }
 
-static inline int template_callback_double(unpack_user* u, double d, msgpack_object* o)
+static int template_callback_double(unpack_user* u, double d, msgpack_object* o)
 { o->type = MSGPACK_OBJECT_DOUBLE; o->via.dec = d; return 0; }
 
-static inline int template_callback_nil(unpack_user* u, msgpack_object* o)
+static int template_callback_nil(unpack_user* u, msgpack_object* o)
 { o->type = MSGPACK_OBJECT_NIL; return 0; }
 
-static inline int template_callback_true(unpack_user* u, msgpack_object* o)
-{ o->type = MSGPACK_OBJECT_BOOLEAN; o->via.boolean = true; return 0; }
+static int template_callback_true(unpack_user* u, msgpack_object* o)
+{ o->type = MSGPACK_OBJECT_BOOLEAN; o->via.boolean = 1; return 0; }
 
-static inline int template_callback_false(unpack_user* u, msgpack_object* o)
-{ o->type = MSGPACK_OBJECT_BOOLEAN; o->via.boolean = false; return 0; }
+static int template_callback_false(unpack_user* u, msgpack_object* o)
+{ o->type = MSGPACK_OBJECT_BOOLEAN; o->via.boolean = 0; return 0; }
 
-static inline int template_callback_array(unpack_user* u, unsigned int n, msgpack_object* o)
+static int template_callback_array(unpack_user* u, unsigned int n, msgpack_object* o)
 {
 	o->type = MSGPACK_OBJECT_ARRAY;
 	o->via.array.size = 0;
@@ -110,10 +110,10 @@ static inline int template_callback_array(unpack_user* u, unsigned int n, msgpac
 	return 0;
 }
 
-static inline int template_callback_array_item(unpack_user* u, msgpack_object* c, msgpack_object o)
+static int template_callback_array_item(unpack_user* u, msgpack_object* c, msgpack_object o)
 { c->via.array.ptr[c->via.array.size++] = o; return 0; }
 
-static inline int template_callback_map(unpack_user* u, unsigned int n, msgpack_object* o)
+static int template_callback_map(unpack_user* u, unsigned int n, msgpack_object* o)
 {
 	o->type = MSGPACK_OBJECT_MAP;
 	o->via.map.size = 0;
@@ -122,7 +122,7 @@ static inline int template_callback_map(unpack_user* u, unsigned int n, msgpack_
 	return 0;
 }
 
-static inline int template_callback_map_item(unpack_user* u, msgpack_object* c, msgpack_object k, msgpack_object v)
+static int template_callback_map_item(unpack_user* u, msgpack_object* c, msgpack_object k, msgpack_object v)
 {
 	c->via.map.ptr[c->via.map.size].key = k;
 	c->via.map.ptr[c->via.map.size].val = v;
@@ -130,12 +130,12 @@ static inline int template_callback_map_item(unpack_user* u, msgpack_object* c, 
 	return 0;
 }
 
-static inline int template_callback_raw(unpack_user* u, const char* b, const char* p, unsigned int l, msgpack_object* o)
+static int template_callback_raw(unpack_user* u, const char* b, const char* p, unsigned int l, msgpack_object* o)
 {
 	o->type = MSGPACK_OBJECT_RAW;
 	o->via.raw.ptr = p;
 	o->via.raw.size = l;
-	u->referenced = true;
+	u->referenced = 1;
 	return 0;
 }
 
@@ -148,12 +148,12 @@ static inline int template_callback_raw(unpack_user* u, const char* b, const cha
 #define COUNTER_SIZE (sizeof(_msgpack_atomic_counter_t))
 
 
-static inline void init_count(void* buffer)
+static void init_count(void* buffer)
 {
 	*(volatile _msgpack_atomic_counter_t*)buffer = 1;
 }
 
-static inline void decl_count(void* buffer)
+static void decl_count(void* buffer)
 {
 	// atomic if(--*(_msgpack_atomic_counter_t*)buffer == 0) { free(buffer); }
 	if(_msgpack_sync_decr_and_fetch((volatile _msgpack_atomic_counter_t*)buffer) == 0) {
@@ -161,41 +161,45 @@ static inline void decl_count(void* buffer)
 	}
 }
 
-static inline void incr_count(void* buffer)
+static void incr_count(void* buffer)
 {
 	// atomic ++*(_msgpack_atomic_counter_t*)buffer;
 	_msgpack_sync_incr_and_fetch((volatile _msgpack_atomic_counter_t*)buffer);
 }
 
-static inline _msgpack_atomic_counter_t get_count(void* buffer)
+static _msgpack_atomic_counter_t get_count(void* buffer)
 {
 	return *(volatile _msgpack_atomic_counter_t*)buffer;
 }
 
 
 
-bool msgpack_unpacker_init(msgpack_unpacker* mpac, size_t initial_buffer_size)
+int msgpack_unpacker_init(msgpack_unpacker* mpac, size_t initial_buffer_size)
 {
+	char* buffer;
+	void* ctx;
+	msgpack_zone* z;
+
 	if(initial_buffer_size < COUNTER_SIZE) {
 		initial_buffer_size = COUNTER_SIZE;
 	}
 
-	char* buffer = (char*)malloc(initial_buffer_size);
+	buffer = (char*)malloc(initial_buffer_size);
 	if(buffer == NULL) {
-		return false;
+		return 0;
 	}
 
-	void* ctx = malloc(sizeof(template_context));
+	ctx = malloc(sizeof(template_context));
 	if(ctx == NULL) {
 		free(buffer);
-		return false;
+		return 0;
 	}
 
-	msgpack_zone* z = msgpack_zone_new(MSGPACK_ZONE_CHUNK_SIZE);
+	z = msgpack_zone_new(MSGPACK_ZONE_CHUNK_SIZE);
 	if(z == NULL) {
 		free(ctx);
 		free(buffer);
-		return false;
+		return 0;
 	}
 
 	mpac->buffer = buffer;
@@ -211,9 +215,9 @@ bool msgpack_unpacker_init(msgpack_unpacker* mpac, size_t initial_buffer_size)
 
 	template_init(CTX_CAST(mpac->ctx));
 	CTX_CAST(mpac->ctx)->user.z = mpac->z;
-	CTX_CAST(mpac->ctx)->user.referenced = false;
+	CTX_CAST(mpac->ctx)->user.referenced = 0;
 
-	return true;
+	return 1;
 }
 
 void msgpack_unpacker_destroy(msgpack_unpacker* mpac)
@@ -245,7 +249,7 @@ void msgpack_unpacker_free(msgpack_unpacker* mpac)
 	free(mpac);
 }
 
-bool msgpack_unpacker_expand_buffer(msgpack_unpacker* mpac, size_t size)
+int msgpack_unpacker_expand_buffer(msgpack_unpacker* mpac, size_t size)
 {
 	if(mpac->used == mpac->off && get_count(mpac->buffer) == 1
 			&& !CTX_REFERENCED(mpac)) {
@@ -255,19 +259,21 @@ bool msgpack_unpacker_expand_buffer(msgpack_unpacker* mpac, size_t size)
 		mpac->off = COUNTER_SIZE;
 
 		if(mpac->free >= size) {
-			return true;
+			return 1;
 		}
 	}
 
 	if(mpac->off == COUNTER_SIZE) {
 		size_t next_size = (mpac->used + mpac->free) * 2;  // include COUNTER_SIZE
+		char* tmp;
+
 		while(next_size < size + mpac->used) {
 			next_size *= 2;
 		}
 
-		char* tmp = (char*)realloc(mpac->buffer, next_size);
+		tmp = (char*)realloc(mpac->buffer, next_size);
 		if(tmp == NULL) {
-			return false;
+			return 0;
 		}
 
 		mpac->buffer = tmp;
@@ -276,13 +282,15 @@ bool msgpack_unpacker_expand_buffer(msgpack_unpacker* mpac, size_t size)
 	} else {
 		size_t next_size = mpac->initial_buffer_size;  // include COUNTER_SIZE
 		size_t not_parsed = mpac->used - mpac->off;
+		char* tmp;
+
 		while(next_size < size + not_parsed + COUNTER_SIZE) {
 			next_size *= 2;
 		}
 
-		char* tmp = (char*)malloc(next_size);
+		tmp = (char*)malloc(next_size);
 		if(tmp == NULL) {
-			return false;
+			return 0;
 		}
 
 		init_count(tmp);
@@ -292,9 +300,9 @@ bool msgpack_unpacker_expand_buffer(msgpack_unpacker* mpac, size_t size)
 		if(CTX_REFERENCED(mpac)) {
 			if(!msgpack_zone_push_finalizer(mpac->z, decl_count, mpac->buffer)) {
 				free(tmp);
-				return false;
+				return 0;
 			}
-			CTX_REFERENCED(mpac) = false;
+			CTX_REFERENCED(mpac) = 0;
 		} else {
 			decl_count(mpac->buffer);
 		}
@@ -305,7 +313,7 @@ bool msgpack_unpacker_expand_buffer(msgpack_unpacker* mpac, size_t size)
 		mpac->off = COUNTER_SIZE;
 	}
 
-	return true;
+	return 1;
 }
 
 int msgpack_unpacker_execute(msgpack_unpacker* mpac)
@@ -326,16 +334,19 @@ msgpack_object msgpack_unpacker_data(msgpack_unpacker* mpac)
 
 msgpack_zone* msgpack_unpacker_release_zone(msgpack_unpacker* mpac)
 {
+	msgpack_zone* r;
+	msgpack_zone* old;
+
 	if(!msgpack_unpacker_flush_zone(mpac)) {
 		return NULL;
 	}
 
-	msgpack_zone* r = msgpack_zone_new(MSGPACK_ZONE_CHUNK_SIZE);
+	r = msgpack_zone_new(MSGPACK_ZONE_CHUNK_SIZE);
 	if(r == NULL) {
 		return NULL;
 	}
 
-	msgpack_zone* old = mpac->z;
+	old = mpac->z;
 	mpac->z = r;
 	CTX_CAST(mpac->ctx)->user.z = mpac->z;
 
@@ -347,18 +358,18 @@ void msgpack_unpacker_reset_zone(msgpack_unpacker* mpac)
 	msgpack_zone_clear(mpac->z);
 }
 
-bool msgpack_unpacker_flush_zone(msgpack_unpacker* mpac)
+int msgpack_unpacker_flush_zone(msgpack_unpacker* mpac)
 {
 	if(CTX_REFERENCED(mpac)) {
 		if(!msgpack_zone_push_finalizer(mpac->z, decl_count, mpac->buffer)) {
-			return false;
+			return 0;
 		}
-		CTX_REFERENCED(mpac) = false;
+		CTX_REFERENCED(mpac) = 0;
 
 		incr_count(mpac->buffer);
 	}
 
-	return true;
+	return 1;
 }
 
 void msgpack_unpacker_reset(msgpack_unpacker* mpac)
@@ -368,25 +379,27 @@ void msgpack_unpacker_reset(msgpack_unpacker* mpac)
 	mpac->parsed = 0;
 }
 
-bool msgpack_unpacker_next(msgpack_unpacker* mpac, msgpack_unpacked* result)
+int msgpack_unpacker_next(msgpack_unpacker* mpac, msgpack_unpacked* result)
 {
+	int ret;
+
 	if(result->zone != NULL) {
 		msgpack_zone_free(result->zone);
 	}
 
-	int ret = msgpack_unpacker_execute(mpac);
+	ret = msgpack_unpacker_execute(mpac);
 
 	if(ret <= 0) {
 		result->zone = NULL;
 		memset(&result->data, 0, sizeof(msgpack_object));
-		return false;
+		return 0;
 	}
 
 	result->zone = msgpack_unpacker_release_zone(mpac);
 	result->data = msgpack_unpacker_data(mpac);
 	msgpack_unpacker_reset(mpac);
 
-	return true;
+	return 1;
 }
 
 
@@ -394,21 +407,21 @@ msgpack_unpack_return
 msgpack_unpack(const char* data, size_t len, size_t* off,
 		msgpack_zone* result_zone, msgpack_object* result)
 {
-	size_t noff = 0;
-	if(off != NULL) { noff = *off; }
+	size_t noff = off ? *off : 0;
+	template_context ctx;
+	int e;
 
 	if(len <= noff) {
 		// FIXME
 		return MSGPACK_UNPACK_CONTINUE;
 	}
 
-	template_context ctx;
 	template_init(&ctx);
 
 	ctx.user.z = result_zone;
-	ctx.user.referenced = false;
+	ctx.user.referenced = 0;
 
-	int e = template_execute(&ctx, data, len, &noff);
+	e = template_execute(&ctx, data, len, &noff);
 	if(e < 0) {
 		return MSGPACK_UNPACK_PARSE_ERROR;
 	}
@@ -428,30 +441,31 @@ msgpack_unpack(const char* data, size_t len, size_t* off,
 	return MSGPACK_UNPACK_SUCCESS;
 }
 
-bool msgpack_unpack_next(msgpack_unpacked* result,
+int msgpack_unpack_next(msgpack_unpacked* result,
 		const char* data, size_t len, size_t* off)
 {
+	size_t noff = off ? *off : 0;
+	msgpack_zone* z;
+	int e;
+	template_context ctx;
+
 	msgpack_unpacked_destroy(result);
 
-	size_t noff = 0;
-	if(off != NULL) { noff = *off; }
-
 	if(len <= noff) {
-		return false;
+		return 0;
 	}
 
-	msgpack_zone* z = msgpack_zone_new(MSGPACK_ZONE_CHUNK_SIZE);
+	z = msgpack_zone_new(MSGPACK_ZONE_CHUNK_SIZE);
 
-	template_context ctx;
 	template_init(&ctx);
 
 	ctx.user.z = z;
-	ctx.user.referenced = false;
+	ctx.user.referenced = 0;
 
-	int e = template_execute(&ctx, data, len, &noff);
+	e = template_execute(&ctx, data, len, &noff);
 	if(e <= 0) {
 		msgpack_zone_free(z);
-		return false;
+		return 0;
 	}
 
 	if(off != NULL) { *off = noff; }
@@ -459,7 +473,7 @@ bool msgpack_unpack_next(msgpack_unpacked* result,
 	result->zone = z;
 	result->data = template_data(&ctx);
 
-	return true;
+	return 1;
 }
 
 // FIXME: Dirty hack to avoid a bus error caused by OS X's old gcc.

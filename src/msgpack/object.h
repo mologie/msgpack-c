@@ -63,7 +63,7 @@ typedef struct {
 } msgpack_object_raw;
 
 typedef union {
-	bool boolean;
+	int boolean;
 	uint64_t u64;
 	int64_t  i64;
 	double   dec;
@@ -85,7 +85,7 @@ typedef struct msgpack_object_kv {
 
 void msgpack_object_print(FILE* out, msgpack_object o);
 
-bool msgpack_object_equal(const msgpack_object x, const msgpack_object y);
+int msgpack_object_equal(const msgpack_object x, const msgpack_object y);
 
 /** @} */
 

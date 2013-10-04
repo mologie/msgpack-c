@@ -27,7 +27,7 @@ namespace msgpack {
 inline bool& operator>> (object o, bool& v)
 {
 	if(o.type != type::BOOLEAN) { throw type_error(); }
-	v = o.via.boolean;
+	v = !!o.via.boolean;
 	return v;
 }
 

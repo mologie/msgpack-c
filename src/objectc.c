@@ -64,33 +64,35 @@ int msgpack_pack_object(msgpack_packer* pk, msgpack_object d)
 	case MSGPACK_OBJECT_ARRAY:
 		{
 			int ret = msgpack_pack_array(pk, d.via.array.size);
-			if(ret < 0) { return ret; }
-
-			msgpack_object* o = d.via.array.ptr;
-			msgpack_object* const oend = d.via.array.ptr + d.via.array.size;
-			for(; o != oend; ++o) {
-				ret = msgpack_pack_object(pk, *o);
-				if(ret < 0) { return ret; }
+			if(ret < 0) {
+				return ret;
+			} else {
+				msgpack_object* o = d.via.array.ptr;
+				msgpack_object* const oend = d.via.array.ptr + d.via.array.size;
+				for(; o != oend; ++o) {
+					ret = msgpack_pack_object(pk, *o);
+					if(ret < 0) { return ret; }
+				}
+				return 0;
 			}
-
-			return 0;
 		}
 
 	case MSGPACK_OBJECT_MAP:
 		{
 			int ret = msgpack_pack_map(pk, d.via.map.size);
-			if(ret < 0) { return ret; }
-
-			msgpack_object_kv* kv = d.via.map.ptr;
-			msgpack_object_kv* const kvend = d.via.map.ptr + d.via.map.size;
-			for(; kv != kvend; ++kv) {
-				ret = msgpack_pack_object(pk, kv->key);
-				if(ret < 0) { return ret; }
-				ret = msgpack_pack_object(pk, kv->val);
-				if(ret < 0) { return ret; }
+			if(ret < 0) {
+				return ret;
+			} else {
+				msgpack_object_kv* kv = d.via.map.ptr;
+				msgpack_object_kv* const kvend = d.via.map.ptr + d.via.map.size;
+				for(; kv != kvend; ++kv) {
+					ret = msgpack_pack_object(pk, kv->key);
+					if(ret < 0) { return ret; }
+					ret = msgpack_pack_object(pk, kv->val);
+					if(ret < 0) { return ret; }
+				}
+				return 0;
 			}
-
-			return 0;
 		}
 
 	default:
@@ -132,9 +134,9 @@ void msgpack_object_print(FILE* out, msgpack_object o)
 		fprintf(out, "[");
 		if(o.via.array.size != 0) {
 			msgpack_object* p = o.via.array.ptr;
+			msgpack_object* pend = o.via.array.ptr + o.via.array.size;
 			msgpack_object_print(out, *p);
 			++p;
-			msgpack_object* const pend = o.via.array.ptr + o.via.array.size;
 			for(; p < pend; ++p) {
 				fprintf(out, ", ");
 				msgpack_object_print(out, *p);
@@ -147,11 +149,11 @@ void msgpack_object_print(FILE* out, msgpack_object o)
 		fprintf(out, "{");
 		if(o.via.map.size != 0) {
 			msgpack_object_kv* p = o.via.map.ptr;
+			msgpack_object_kv* pend = o.via.map.ptr + o.via.map.size;
 			msgpack_object_print(out, p->key);
 			fprintf(out, "=>");
 			msgpack_object_print(out, p->val);
 			++p;
-			msgpack_object_kv* const pend = o.via.map.ptr + o.via.map.size;
 			for(; p < pend; ++p) {
 				fprintf(out, ", ");
 				msgpack_object_print(out, p->key);
@@ -168,13 +170,13 @@ void msgpack_object_print(FILE* out, msgpack_object o)
 	}
 }
 
-bool msgpack_object_equal(const msgpack_object x, const msgpack_object y)
+int msgpack_object_equal(const msgpack_object x, const msgpack_object y)
 {
-	if(x.type != y.type) { return false; }
+	if(x.type != y.type) { return 0; }
 
 	switch(x.type) {
 	case MSGPACK_OBJECT_NIL:
-		return true;
+		return 1;
 
 	case MSGPACK_OBJECT_BOOLEAN:
 		return x.via.boolean == y.via.boolean;
@@ -194,44 +196,44 @@ bool msgpack_object_equal(const msgpack_object x, const msgpack_object y)
 
 	case MSGPACK_OBJECT_ARRAY:
 		if(x.via.array.size != y.via.array.size) {
-			return false;
+			return 0;
 		} else if(x.via.array.size == 0) {
-			return true;
+			return 1;
 		} else {
 			msgpack_object* px = x.via.array.ptr;
 			msgpack_object* const pxend = x.via.array.ptr + x.via.array.size;
 			msgpack_object* py = y.via.array.ptr;
 			do {
 				if(!msgpack_object_equal(*px, *py)) {
-					return false;
+					return 0;
 				}
 				++px;
 				++py;
 			} while(px < pxend);
-			return true;
+			return 1;
 		}
 
 	case MSGPACK_OBJECT_MAP:
 		if(x.via.map.size != y.via.map.size) {
-			return false;
+			return 0;
 		} else if(x.via.map.size == 0) {
-			return true;
+			return 1;
 		} else {
 			msgpack_object_kv* px = x.via.map.ptr;
 			msgpack_object_kv* const pxend = x.via.map.ptr + x.via.map.size;
 			msgpack_object_kv* py = y.via.map.ptr;
 			do {
 				if(!msgpack_object_equal(px->key, py->key) || !msgpack_object_equal(px->val, py->val)) {
-					return false;
+					return 0;
 				}
 				++px;
 				++py;
 			} while(px < pxend);
-			return true;
+			return 1;
 		}
 
 	default:
-		return false;
+		return 0;
 	}
 }
 

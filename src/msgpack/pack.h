@@ -100,13 +100,13 @@ int msgpack_pack_object(msgpack_packer* pk, msgpack_object d);
 
 
 #define msgpack_pack_inline_func(name) \
-	inline int msgpack_pack ## name
+	int msgpack_pack ## name
 
 #define msgpack_pack_inline_func_cint(name) \
-	inline int msgpack_pack ## name
+	int msgpack_pack ## name
 
 #define msgpack_pack_inline_func_fixint(name) \
-	inline int msgpack_pack_fix ## name
+	int msgpack_pack_fix ## name
 
 #define msgpack_pack_user msgpack_packer*
 
@@ -115,13 +115,13 @@ int msgpack_pack_object(msgpack_packer* pk, msgpack_object d);
 
 #include "pack_template.h"
 
-inline void msgpack_packer_init(msgpack_packer* pk, void* data, msgpack_packer_write callback)
+void msgpack_packer_init(msgpack_packer* pk, void* data, msgpack_packer_write callback)
 {
 	pk->data = data;
 	pk->callback = callback;
 }
 
-inline msgpack_packer* msgpack_packer_new(void* data, msgpack_packer_write callback)
+msgpack_packer* msgpack_packer_new(void* data, msgpack_packer_write callback)
 {
 	msgpack_packer* pk = (msgpack_packer*)calloc(1, sizeof(msgpack_packer));
 	if(!pk) { return NULL; }
@@ -129,7 +129,7 @@ inline msgpack_packer* msgpack_packer_new(void* data, msgpack_packer_write callb
 	return pk;
 }
 
-inline void msgpack_packer_free(msgpack_packer* pk)
+void msgpack_packer_free(msgpack_packer* pk)
 {
 	free(pk);
 }

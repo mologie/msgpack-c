@@ -237,7 +237,7 @@ void operator<< (object::with_zone& o, const T& v)
 
 inline bool operator==(const object x, const object y)
 {
-	return msgpack_object_equal(x, y);
+	return !!msgpack_object_equal(x, y);
 }
 
 template <typename T>
